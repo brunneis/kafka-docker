@@ -19,9 +19,9 @@ MAINTAINER "Rodrigo Martínez" <dev@brunneis.com>
 # KAFKA
 ################################################
 
-ENV KAFKA_VERSION 1.1.0
-ENV KAFKA_SUBVERSION kafka_2.12
-ENV KAFKA_ARCHIVE $KAFKA_SUBVERSION-$KAFKA_VERSION.tgz
+ARG KAFKA_VERSION
+ARG KAFKA_SUBVERSION
+ENV KAFKA_ARCHIVE kafka_$KAFKA_SUBVERSION-$KAFKA_VERSION.tgz
 ENV KAFKA_ARCHIVE_URL https://archive.apache.org/dist/kafka/$KAFKA_VERSION/$KAFKA_ARCHIVE
 ENV KAFKA_SHA1_URL $KAFKA_ARCHIVE_URL.sha1
 ENV KAFKA_INSTALL_DIR /opt/kafka
@@ -38,12 +38,14 @@ RUN \
     && tar xvf $KAFKA_ARCHIVE -C $KAFKA_INSTALL_DIR \
     && rm -f $KAFKA_ARCHIVE \
     && rm -f $KAFKA_ARCHIVE.sha1 \
-    && ln -s $KAFKA_INSTALL_DIR/*kafka* $KAFKA_INSTALL_DIR/default \
-    && yum -y purge wget \
-    && yum clean all
+    && ln -s $KAFKA_INSTALL_DIR/*kafka* $KAFKA_INSTALL_DIR/default
 
 # Add Kafka binaries to PATH
 ENV PATH=$KAFKA_INSTALL_DIR/default/bin:$PATH
+
+# Overwrite default configuration files
+COPY config $KAFKA_INSTALL_DIR/default/config
+COPY bin $KAFKA_INSTALL_DIR/default/bin
 
 # Start Kafka (standalone mode)
 COPY entrypoint.sh /
